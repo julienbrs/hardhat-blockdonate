@@ -6,14 +6,16 @@ const {
     developmentChains,
 } = require("../helper-hardhat-config");
 const { network } = require("hardhat"); //network coming from hardhat
+require("dotenv").config();
 
 // same as :   [...] = async (hre) => {const { getNamedAccounts, deployments } = hre;}
-module.exports.default = async ({ getNamedAccounts, deployments }) => {
+module.exports = async ({ getNamedAccounts, deployments }) => {
     const { deploy, log } = deployments;
     const { deployer } = await getNamedAccounts();
+    const { verify } = require("../utils/verify");
     const chainId = network.config.chainId;
 
-    //const ethUsdPriceFeedAddress = networkConfig[chainId]["ethUsdPriceFeed"];
+    // const ethUsdPriceFeedAddress = networkConfig[chainId]["ethUsdPriceFeed"];
     let ethUsdPriceFeedAddress;
     if (developmentChains.includes(network.name)) {
         const ethUsdAggregator = await deployments.get("MockV3Aggregator");
@@ -22,14 +24,24 @@ module.exports.default = async ({ getNamedAccounts, deployments }) => {
         ethUsdPriceFeedAddress = networkConfig[chainId]["ethUsdPriceFeed"];
     }
 
-    // if contract doesn't exist, we deploy a minimal version of it to local-testing
+    // If contract doesn't exist, we deploy a minimal version of it to local-testing
 
-    // when we are in local, we use mock
+    // When we are in local, we use mock
+
     const fundMe = await deploy("FundMe", {
         from: deployer,
-        args: [ethUsdPriceFeedAddress], // put price feed address as an argument
+        args: [ethUsdPriceFeedAddress],
         log: true,
+        // we need to wait if on a live network so we can verify properly
+        waitConfirmations: network.config.blockConfirmations || 1,
     });
+
+    if (
+        !developmentChains.includes(network.name) &&
+        process.env.ETHERSCAN_API_KEY
+    ) {
+        await verify(fundMe.address, [ethUsdPriceFeedAddress]);
+    }
     log("===============================================================\n");
 };
 module.exports.tags = ["all", "fundme"];
