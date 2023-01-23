@@ -20,9 +20,10 @@ contract FundMe {
     /* State Variables */
     mapping(address => uint256) private s_addressToAmountFunded; //s_Name for storage variable
     address[] private s_funders;
+    uint256 amountFounded;
 
     address private immutable i_owner; // i_immutable
-    uint256 public constant MINIMUM_USD = 50 * 10 ** 18;
+    uint256 public constant MINIMUM_USD = 1 * 10 ** 18;
 
     AggregatorV3Interface private s_priceFeed;
 
@@ -38,6 +39,7 @@ contract FundMe {
     constructor(address priceFeedAdress) {
         i_owner = msg.sender;
         s_priceFeed = AggregatorV3Interface(priceFeedAdress);
+        amountFounded = 0;
     }
 
     /**
@@ -50,6 +52,7 @@ contract FundMe {
         );
         // require(PriceConverter.getConversionRate(msg.value) >= MINIMUM_USD, "You need to spend more ETH!");
         s_addressToAmountFunded[msg.sender] += msg.value;
+        amountFounded += msg.value;
         s_funders.push(msg.sender);
     }
 
@@ -107,7 +110,15 @@ contract FundMe {
         return s_addressToAmountFunded[funder];
     }
 
+    function getAmountFunded() public view returns (uint256) {
+        return amountFounded;
+    }
+
     function getPriceFeed() public view returns (AggregatorV3Interface) {
         return s_priceFeed;
+    }
+
+    function getNumberBackers() public view returns (uint256) {
+        return s_funders.length;
     }
 }

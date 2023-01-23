@@ -7,7 +7,7 @@ const { assert } = require("chai");
 // We check if we aren't on a development chain, so on a testnet
 developmentChains.includes(network.name)
     ? describe.skip
-    : describe("FundMe", async function () {
+    : describe("FundMe", function () {
           console.log("Starting staging test");
           let fundMe;
           let deployer;

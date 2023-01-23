@@ -51,6 +51,14 @@ const { developmentChains } = require("../../helper-hardhat-config");
               });
           });
 
+          describe("getNumberBackers", function () {
+              it("Should return that only 1 backer", async function () {
+                  await fundMe.fund({ value: sendValue });
+                  const numberBackers = await fundMe.getNumberBackers();
+                  assert.equal(numberBackers, 1);
+              });
+          });
+
           describe("withdraw", function () {
               beforeEach(async function () {
                   await fundMe.fund({ value: sendValue });
